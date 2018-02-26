@@ -1,53 +1,134 @@
 require("dotenv").config();
 
-  var spotify = new Spotify(keys.spotify);
-  var client = new Twitter(keys.twitter);
-
-// argv has to be one of these things - switch
-//   * `my-tweets`
-
-// * `spotify-this-song`
-
-// * `movie-this`
-
-// * `do-what-it-says`
-
-
-// default return you need to put in one of these:::blah above
-
-// This will show the following information about the song in your terminal/bash window
-//console.lgo this info:
-// Artist(s)
-// The song's name
-// A preview link of the song from Spotify
-// The album that the song is from
-// If no song is provided then your program will default to "The Sign" by Ace of Base.
-
-
-// call omdb and disply:
-
- // Title of the movie.
- //   * Year the movie came out.
- //   * IMDB Rating of the movie.
- //   * Rotten Tomatoes Rating of the movie.
- //   * Country where the movie was produced.
- //   * Language of the movie.
- //   * Plot of the movie.
- //   * Actors in the movie.
-
-//  If the user doesn't type a movie in, the program will output data for the movie 'Mr. Nobody.'
-
-
-// If you haven't watched "Mr. Nobody," then you should: http://www.imdb.com/title/tt0485947/
-
-// It's on Netflix!
-
 var fs = require("fs");
+var keys = require("./keys.js");
+var request = require("request");
 
-//look at class activities
+var twitter = require("twitter");
+var client = new twitter(keys.twitter);
 
-// It should run spotify-this-song for "I Want it That Way," as follows the text in random.txt.
-// Feel free to change the text in that document to test out the feature for other commands.
+var spotify = require("node-spotify-api");
+var spotifyClient = new spotify(keys.spotify);
+
+	// Inquirer
+	// var inquirer = require("inquirer");
+
+	console.log("\nEnter one of the following commands to begin:\n");
+	console.log("\nmy-tweets\n");
+	console.log("\nspotify-this-song song\n");
+	console.log("\nmovie-this movie\n");
+	console.log("\ndo-what-it-says\n");
+
+	var userChoice = process.argv[2];
+	var userInput = process.argv[3];
+
+	switch (userChoice) {
+
+	    case 'my-tweets':
+	        myTweets();
+	        break;
+
+	    case 'spotify-this-song':
+	        spotifyThisSong();
+	        break;
+
+	    case 'movie-this':
+	        movieThis();
+	        break;
+
+	    case 'do-what-it-says':
+	        doWhatItSays();
+	        break;
+	    default: 
+	    	console.log("\nEnter a Valid Commands from the Above Options.\n");
+	    	break;
+
+	}
+
+	function myTweets() {
+
+	// node liri.js my-tweets
+	
+	    var twitterParams = {
+	        screen_name: 'joyoussydney',
+	        count: 20
+	    };
+
+	    client.get('statuses/user_timeline', twitterParams, function(error, tweets, response) {
+	        if (error) {
+	            console.log('Error');
+	        } else {
+	            for (i = 0; i < tweets.length; i++) {
+	                var myTweets = (tweets[i].created_at + '\n' + tweets[i].text + '\n');
+	                console.log(myTweets);
+	            }
+	        };
+	    });
+	};
+
+	function spotifyThisSong (){
+
+		var songName;
+			if (userInput == undefined) {
+		        songName = "The Sign";
+		     
+		    } else {
+		        songName = userInput;	
+		    } 
+
+		spotifyClient.search({ type: 'track', query: songName }, function(error, data) {
+
+        if (error) {
+            console.log(error);
+            return;
+        }
+        
+        console.log("Artist(s): " + data.tracks.items[0].album.artists[0].name);
+        console.log("Song name: " + data.tracks.items[0].name);
+        console.log("A preview link of the song from Spotify: " + data.tracks.items[0].album.artists[0].external_urls.spotify);
+        console.log("Album Name: " + data.tracks.items[0].album.name)
+    });
+	}
+
+	function movieThis (){
+
+		var movie = userInput;
+
+	    if (userInput === undefined) {
+	        movie = "Mr. Nobody";
+	       
+	    } else {
+	        movie = userInput;
+	    };
+
+	    var requestURL = "https://www.omdbapi.com/?t=" + movie + "&tomatoes=true&y=&plot=short&r=json&apikey=trilogy";
+
+    	request(requestURL, function(error, response, data) {
+        if (error) {
+            console.log(error);
+        } else {
+            console.log("Movie Title: " + JSON.parse(data)["Title"]);
+            console.log("Year Movie Came Out: " + JSON.parse(data)["Year"]);
+            console.log("IMDB Rating: " + JSON.parse(data)["imdbRating"]);
+            console.log("Rotten Tomatoes URL: " + JSON.parse(data)["tomatoURL"]);
+            console.log("Country Where Movie Was Produced: " + JSON.parse(data)["Country"]);
+            console.log("Language: " + JSON.parse(data)["Language"]);
+            console.log("Plot: " + JSON.parse(data)["Plot"]);
+            console.log("Actors: " + JSON.parse(data)["Actors"]);
+            
+        }
+    });
+
+	}
+
+	function doWhatItSays (){
+
+		fs.readFile("random.txt", "utf8", function(error, data) {
+	    console.log(data);
+	  });
+};
+
+
 
 
 
